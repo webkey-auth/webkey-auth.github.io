@@ -26,7 +26,9 @@ In cryptography, if an attacker has access to your machine, that's already game 
 Client Usage
 ============
 
-Bare necessities:
+See a demo here: http://webkey-auth.github.io/test/host.html
+
+The bare necessities:
 ```
 <body><div id="a">Click to login</div></body>
 <script>

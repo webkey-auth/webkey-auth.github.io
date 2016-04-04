@@ -22,7 +22,7 @@ pem.createCertificate({days:365*10, selfSigned:true}, function(err, keys) {
                 console.log("got request for: "+requestPath)
 
                 if(requestPath === '/') {
-                    requestPath = '/test/host.html'
+                    requestPath = '/test/localhost.html'
                 }
 
                 res.writeHead(200)

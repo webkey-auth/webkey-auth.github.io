@@ -1,0 +1,31 @@
+{
+  "note": "Use npm for development. The devDependencies aren't on bower.",
+
+  "name": "keysight",
+  "main": "dist/keysight.umd.js",
+  "homepage": "https://github.com/fresheneesz/keysight",
+  "authors": [
+    "Billy Tetrud"
+  ],
+  "description": "A translator for javascript keyboard events to and from understandable english. ",
+  "keywords": [
+     "key", "keypress", "keydown", "keyup", "keycode", "char", "charcode", "which", "keyboard", "numpad", "input"
+  ],
+  "moduleType": [
+    "amd",
+    "CommonJS",
+    "globals"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "node_modules",
+    "bower_components",
+    "test",
+    ".idea",
+    "proto.iml",
+    "npm-debug.log",
+    "*.iml"
+  ],
+  "devDependencies": {
+  }
+}

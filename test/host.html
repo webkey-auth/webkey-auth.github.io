@@ -1,0 +1,33 @@
+<body>
+    <div id="a">Click me</div>
+</body>
+<script>
+    var guestDomain = "http://localhost:8100"
+
+    var webkeyFrame = document.createElement('iframe')
+    webkeyFrame.src = '../guest.html'
+    webkeyFrame.style.display = 'none'
+
+    var token = Math.random().toString()
+    window.addEventListener("message", function(message){
+        if (message.origin !== guestDomain) return // not from the right place
+
+        var response = JSON.parse(message.data)
+        if(response.ready) {
+            document.getElementById('a').addEventListener('click', function() {
+                var webkey = webkeyFrame.contentWindow
+                webkey.postMessage(JSON.stringify({c:'auth', token: token}),guestDomain)
+            })
+
+        } else if(response.response === 'auth') {
+            console.log("Got the proof: ")
+            console.dir(response)
+        } else {
+            console.log(response)
+        }
+    })
+
+
+    document.body.appendChild(webkeyFrame)
+
+</script>

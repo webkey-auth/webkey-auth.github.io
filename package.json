@@ -1,0 +1,24 @@
+{"name":"webkey",
+ "version":"0.0.1",
+ "main":"webkey.js",
+ "description": "An RSA based single-click web authentication utility.",
+ "keywords": [
+    "key", "rsa", "public", "private", "encryption", "login", "sign", "log", "in", "auth", "authentication"
+ ],
+ "dependencies":{
+    "keypair": "*",
+    "node-rsa": "*",
+    "aes-js": "*",
+    "pbkdf2": "*"
+ },
+ "devDependencies": {
+     "webpack": "*",
+     "deadunit": "*",
+     "build-modules":"2.0.5",
+     "colors":"*"
+ },
+ "repository": {
+   "type": "git",
+   "url": "git://github.com/fresheneesz/webkey"
+ }
+}

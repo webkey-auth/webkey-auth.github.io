@@ -1,0 +1,27 @@
+<script src="dist/webkey.umd.js"></script>
+<script>
+    window.addEventListener("message", function(message) {
+        webkey.commands.handle(message, function getAcceptance(callback) {
+            var height=600, width=500
+            var authorizeWindow = window.open('/authorize.html','webkeyWindow',
+                    "width="+width+",height="+height+",left="+(screen.width/2-width/2)+",top="+(screen.height/2-height)
+            )
+
+            window.addEventListener("message", function(message){
+                if(message.origin !== document.location.origin) return // ignore
+
+                var params = JSON.parse(message.data)
+                if(params.response === undefined && params.ready === undefined) return // ignore things that aren't responses or ready messages
+
+                if(params.response === 'getAcceptance') {
+                    callback(undefined)
+                    authorizeWindow.close()
+                } else if(params.ready) {
+                    authorizeWindow.postMessage(JSON.stringify({c:'getAcceptance', origin:message.origin}), document.location.origin)
+                }
+            })
+        })
+    })
+
+    parent.postMessage(JSON.stringify({ready:true}), "*")
+</script>

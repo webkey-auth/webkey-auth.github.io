@@ -1,0 +1,106 @@
+<script src="../dist/webkey.umd.js"></script>
+
+<div id="authorize">
+    <div id="question">Do you want to auth with these jerks?</div>
+
+    <div id='authContainer'><span id='auth' class='button'>Authorize</span></div>
+    <div id="autoAuth">Auto auth next time: <input type="checkbox" checked="checked"></div>
+
+    <div id="warning" class="note"></div>
+</div>
+<div id="setup" style="display:none;">
+    <div id="header">To use webkey, set up your email and a password.</div>
+    <div class="input"><span class="label">Email: </span><input id="email"> <span class="note side">This email will act as your username.</span></div>
+    <div class="input"><span class="label">Password: </span><input id="password" type='password'> <span class="note side">Its strongly recommended that you do NOT use the same password as your email account. Webkey will never send your password over the internet.</span></div>
+    <div><span id="accept" class='button'>Accept</span></div>
+</div>
+
+<style>
+    #authContainer {
+        text-align: center;
+        margin: 10px 0;
+    }
+    .button {
+        cursor: pointer;
+        background-color: green;
+        padding: 4px;
+        border-radius: 2px;
+        line-height: 22px;
+        font-size: 22px;
+        -moz-user-select: none;
+        -khtml-user-select: none;
+        -webkit-user-select: none;
+    }
+    #autoAuth, #question, #setup #header {
+        text-align: center;
+    }
+    #setup #header {
+        margin-bottom: 5px;
+    }
+    input {
+        cursor: pointer
+    }
+
+    #warning {
+        margin-top: 10px;
+    }
+    #accept {
+        margin-left: 75px;
+    }
+
+    .label {
+        display: inline-block;
+        text-align: right;
+        color: gray;
+        flex-basis: 75px;
+    }
+    .note {
+        color: gray;
+        font-size: 12px;
+        text-align: center;
+    }
+    .side {
+        display: inline-block;
+        flex-shrink: 50;
+        margin-left: 5px;
+    }
+    .input {
+        display: flex;
+        align-items: center;
+    }
+</style>
+
+<script>
+    if(localStorage.getItem("groups") === null) { // fresh user
+        document.getElementById('authorize').style.display = 'none'
+        document.getElementById('setup').style.display = 'block'
+
+        document.getElementById('accept').addEventListener('click', function() {
+            webkey.utils.changePassword(undefined,password)
+
+            document.getElementById('setup').style.display = 'none'
+            document.getElementById('authorize').style.display = 'block'
+        })
+    }
+
+    window.addEventListener("message", function(message) {
+        var params = JSON.parse(message.data)
+        if(params.c === 'auth') {
+            var origin = message.origin
+        } else if(params.c === 'getAcceptance' && message.origin === document.location.origin) {
+            var origin = params.origin
+        }
+
+        if(origin !== undefined) {
+            document.getElementById('warning').innerText = "Clicking 'Authorize' gives "+origin+" your email address"
+        }
+
+        webkey.commands.handle(message, function getAcceptance(callback) {
+            document.getElementById('auth').addEventListener('click', function() {
+                callback(undefined)
+            })
+        })
+    })
+
+    if(window.opener) window.opener.postMessage(JSON.stringify({ready:true}), "*")
+</script>

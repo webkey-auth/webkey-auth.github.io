@@ -5,18 +5,19 @@ var pbkdf2 = require('pbkdf2/browser')
 
 var hours = 1000*60*60
 
-var keyCache;    // keeps the derived key in memory for the user specified time
 var groupsCache; // keeps the plaintext groups in memory very temporarily (for performance reasons)
 
 var utils = exports
+exports.rsa = rsa
+exports.aes = aes
 
-try {
-    var createProofWorker = new Worker("createProofWorker.js")
+//try {
+//    var createProofWorker = new Worker("createProofWorker.js")
     if(document.location.protocol !== 'https:') throw new Error(document.location.protocol+" isn't secure - use https only")
-} catch(e) {
-    if(!(e instanceof ReferenceError)) throw e
-    // ignore ReferenceError - Worker and document won't be defined inside a worker
-}
+//} catch(e) {
+//    if(!(e instanceof ReferenceError)) throw e
+//    // ignore ReferenceError - Worker and document won't be defined inside a worker
+//}
 
 exports.changePassword = function(oldPassword, newPassword) {
     var groups = getGroups(oldPassword)
@@ -57,19 +58,17 @@ exports.createNewGroup = function(name, email, password, autoAuth) {
     return group
 }
 
-exports.createProof = function(keyPair, origin, token) {
-    var pair = new rsa({environment: 'browser'})
-    pair.importKey(keyPair, 'pkcs8')
-    return pair.sign(token,'base64','utf8')
+exports.createProof = function(keyPair, token) {
+    return keyPair.sign(token,'base64','utf8')
 }
 
-exports.createProofWorker = function(keyPair, origin, token, callback) {
-    createProofWorker.onmessage = function(result) {
-        callback(undefined, result)
-    }
-
-    createProofWorker.postMessage([keyPair, origin, token])
-}
+//exports.createProofWorker = function(keyPair, origin, token, callback) {
+//    createProofWorker.onmessage = function(result) {
+//        callback(undefined, result)
+//    }
+//
+//    createProofWorker.postMessage([keyPair, origin, token])
+//}
 
 
 exports.acceptAuthRequest = function(origin, group, token, password, callback) {
@@ -80,11 +79,32 @@ exports.acceptAuthRequest = function(origin, group, token, password, callback) {
         localStorage.setItem(origin, group.id)
     }
 
-    utils.createProofWorker(group.keyPair, origin, token, function(err, proof) {
-        callback(err, {response:'auth', proof:proof, time:(Date.now()-start)})
-    })
+    var keyPair = getKeyPair(group.keyPair)
+    var proof = utils.createProof(keyPair, token)
+    callback(undefined, {response:'auth', proof:proof, time:(Date.now()-start), publicKey:keyPair.exportKey('pkcs8-public')})
+
+//    utils.createProofWorker(group.keyPair, origin, token, function(err, proof) {
+//        callback(err, {response:'auth', proof:proof, time:(Date.now()-start), publicKey:group.keyPair.exportKey('pkcs8')})
+//    })
 }
 
+exports.validatePassword = function(password) {
+    var groups = localStorage.getItem("groups")
+    var salt = localStorage.getItem("salt")
+    var derivedKey = createKey(salt, password)
+    var decryptedGroups = aesDecrypt(derivedKey, groups)
+
+    try {
+        JSON.parse(decryptedGroups)
+        return true
+    } catch(e) {
+        if(e instanceof SyntaxError) {
+            return false
+        } else {
+            throw e
+        }
+    }
+}
 
 // returns the group for the passed origin
 var getGroup = exports.getGroup = function(origin,password) {
@@ -95,6 +115,12 @@ var getGroup = exports.getGroup = function(origin,password) {
         if(groups[n].id === groupId)
             return groups[n]
     }
+}
+
+function getKeyPair(privateKeyPem) {
+    var pair = new rsa({environment: 'browser'})
+    pair.importKey(privateKeyPem, 'pkcs8')
+    return pair
 }
 
 function createRandomString(length) {
@@ -146,12 +172,13 @@ function getKey(password) {
 
     return key.derived
 }
-
-//var proof = exports.createProof(origin, token)
-//console.log(proof)
 //
-//    var group = getGroup(origin, password)
-//    var pair = new rsa({environment: 'browser'})
-//    pair.importKey(group.keyPair, 'pkcs8')
-//    var x=pair.verify(token,proof,'utf8', 'base64')
-//    console.log(x)
+//function getSalt() {
+//    var salt = localStorage.getItem("salt")
+//    if(salt === null) {
+//        salt = createRandomString(128)
+//        localStorage.setItem("salt", salt)
+//    }
+//
+//    return salt
+//}

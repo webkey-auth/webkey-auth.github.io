@@ -1,13 +1,13 @@
+<script src="dist/webkey.umd.js"></script>
 <body>
-    <div id="a">Click me</div>
+    <div id="a">Click me to log in</div>
+    <div id="logout" style="display:none;">Logout</div>
 </body>
 <script>
     var guestDomain = "https://webkey-auth.github.io"
 //    var guestDomain = "https://localhost:8100"
 
     var webkeyFrame = document.createElement('iframe')
-    webkeyFrame.src = guestDomain+'/guest.html'
-    webkeyFrame.style.display = 'none'
 
     var token = Math.random().toString()
     window.addEventListener("message", function(message){
@@ -16,8 +16,8 @@
         var response = JSON.parse(message.data)
         if(response.ready) {
             document.getElementById('a').addEventListener('click', function() {
-                var webkey = webkeyFrame.contentWindow
-                webkey.postMessage(JSON.stringify({c:'auth', token: token}),guestDomain)
+                var webkeyWindow = webkeyFrame.contentWindow
+                webkeyWindow.postMessage(JSON.stringify({c:'auth', token: token}),guestDomain)
             })
 
         } else if(response.response === 'auth') {
@@ -26,14 +26,35 @@
             } else {
                 console.log("Got the proof: ")
                 console.dir(response)
-                document.getElementById('a').innerText = "Logged in!"
+
+                var pair = new webkey.utils.rsa({environment: 'browser'})
+                pair.importKey(response.publicKey, 'pkcs8-public')
+                var x = pair.verify(token,response.proof,'utf8', 'base64')
+                if(x) {
+                    document.getElementById('a').innerText = "Logged in!"
+                    document.getElementById('logout').style.display = "block"
+                } else {
+                    document.getElementById('a').innerText = "Log in failed : ( . Try again?"
+                }
             }
         } else {
             console.log(response)
         }
     })
 
+    document.getElementById('logout').addEventListener('click', function() {
+        var logoutFrame = document.createElement('iframe')
+        logoutFrame.src = guestDomain+'/logout.html'
+        logoutFrame.style.display = 'none'
+        document.body.appendChild(logoutFrame)
 
+        document.getElementById('logout').style.display = "none"
+        document.getElementById('a').innerText = "Click me to log in"
+    })
+
+
+    webkeyFrame.src = guestDomain+'/guest.html'
+    webkeyFrame.style.display = 'none'
     document.body.appendChild(webkeyFrame)
 
 </script>

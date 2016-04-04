@@ -1,0 +1,89 @@
+<script src="/dist/webkey.umd.js"></script>
+
+<div id="intro">
+    <div id="introtext">
+        Welcome to webkey! Webkey is an RSA based single-click web authentication utility.
+        It allows a web application to allow users to securely authenticate without sending usernames and passwords.
+        To authenticate on a new website, a user would click on a button displayed within an `iframe`, and then confirm on a confirmation page.
+        Subsequent authentications can be done automatically if the user wants.
+
+        Read more at <a href="https://github.com/webkey-auth/webkey-auth.github.io">https://github.com/webkey-auth/webkey-auth.github.io</a>
+    </div>
+</div>
+<div id="setup" style="display:none;">
+    <div class="header">To use webkey, set up your email and a password.</div>
+    <div class="input"><span class="label">Email: </span><input id="email"> <span class="note side">This email will act as your username.</span></div>
+    <div class="input"><span class="label">Password: </span><input id="password" type='password'> <span class="note side">Its strongly recommended that you do NOT use the same password as your email account. Webkey will never send your password over the internet.</span></div>
+    <div><span id="accept" class='button'>Accept</span></div>
+</div>
+<div id="changePassword" style="display:none;">
+    <div>Change your password:</div>
+    <div class="input"><span class="label">Old Password: </span><input id="oldPassword" type='password'></div>
+    <div class="input"><span class="label">New Password: </span><input id="newPassword1" type='password'></div>
+    <div class="input"><span class="label">Re-enter New One: </span><input id="newPassword2" type='password'> <span class="note side">Webkey will never send your password over the internet.</span></div>
+    <div><span id="changePasswordAccept" class='button'>Accept</span></div>
+</div>
+
+<style>
+
+    #intro {
+        text-align: center;
+    }
+    #introtext {
+        margin: auto;
+        max-width: 600px;
+    }
+    .button {
+        cursor: pointer;
+        background-color: green;
+        padding: 4px;
+        border-radius: 2px;
+        line-height: 22px;
+        font-size: 22px;
+        -moz-user-select: none;
+        -khtml-user-select: none;
+        -webkit-user-select: none;
+    }
+    #setup .header {
+        margin-bottom: 5px;
+    }
+    input {
+        cursor: pointer
+    }
+
+    #accept {
+        margin-left: 75px;
+    }
+
+    .label {
+        display: inline-block;
+        text-align: right;
+        color: gray;
+        flex-basis: 75px;
+    }
+    .note {
+        color: gray;
+        font-size: 12px;
+        text-align: center;
+    }
+    .side {
+        display: inline-block;
+        flex-shrink: 50;
+        margin-left: 5px;
+    }
+    .input {
+        display: flex;
+        align-items: center;
+    }
+</style>
+
+<script>
+    if(localStorage.getItem("groups") === null) { // fresh user
+        document.getElementById('setup').style.display = 'block'
+
+        document.getElementById('accept').addEventListener('click', function() {
+            webkey.utils.changePassword(undefined,password)
+            document.getElementById('setup').style.display = 'none'
+        })
+    }
+</script>

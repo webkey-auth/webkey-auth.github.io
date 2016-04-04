@@ -1,6 +1,6 @@
 <script src="/dist/webkey.umd.js"></script>
 
-<div id="authorize">
+<div id="authorize" style="display:none;">
     <div id="question">Do you want to auth with these jerks?</div>
 
     <div id='authContainer'><span id='auth' class='button'>Authorize</span></div>
@@ -9,10 +9,15 @@
     <div id="warning" class="note"></div>
 </div>
 <div id="setup" style="display:none;">
-    <div id="header">To use webkey, set up your email and a password.</div>
+    <div class="header">To use webkey, set up your email and a password.</div>
     <div class="input"><span class="label">Email: </span><input id="email"> <span class="note side">This email will act as your username.</span></div>
     <div class="input"><span class="label">Password: </span><input id="password" type='password'> <span class="note side">Its strongly recommended that you do NOT use the same password as your email account. Webkey will never send your password over the internet.</span></div>
-    <div><span id="accept" class='button'>Accept</span></div>
+    <div class="input"><span class="label">Re-enter: </span><input id="password2" type='password'> <span id="password2Error" class="error side"></span></div>
+    <div><div id="accept" class='button'>Accept</div></div>
+</div>
+<div id="passwordReup" style="display:none;">
+    <div class="input"><span class="longlabel">Re-enter your password: </span><input id="passwordReentry" type='password'> <span id="passwordNote" class="note side">Webkey will never send your password over the internet.</span><span id="passwordWarning" class="error side"></span></div>
+    <div><div id="acceptReentry" class='button'>Accept</div></div>
 </div>
 
 <style>
@@ -31,31 +36,44 @@
         -khtml-user-select: none;
         -webkit-user-select: none;
     }
-    #autoAuth, #question, #setup #header {
+    #autoAuth, #question, #setup .header {
         text-align: center;
     }
-    #setup #header {
+    #setup .header {
         margin-bottom: 5px;
     }
-    input {
+    input[type=checkbox] {
         cursor: pointer
     }
 
     #warning {
         margin-top: 10px;
     }
+    #acceptReentry {
+        display: inline-block;
+    }
     #accept {
+        margin-top: 4px;
+        display: inline-block;
         margin-left: 75px;
     }
 
-    .label {
+    .label, .longlabel {
         display: inline-block;
         text-align: right;
         color: gray;
         flex-basis: 75px;
     }
+    .longlabel {
+        flex-basis: 170px;
+    }
     .note {
         color: gray;
+        font-size: 12px;
+        text-align: center;
+    }
+    .error {
+        color: red;
         font-size: 12px;
         text-align: center;
     }
@@ -71,17 +89,41 @@
 </style>
 
 <script>
-    if(localStorage.getItem("groups") === null) { // fresh user
-        document.getElementById('authorize').style.display = 'none'
-        document.getElementById('setup').style.display = 'block'
-
-        document.getElementById('accept').addEventListener('click', function() {
-            webkey.utils.changePassword(undefined,password)
-
-            document.getElementById('setup').style.display = 'none'
-            document.getElementById('authorize').style.display = 'block'
-        })
+    var getNode = function(id) {
+        var x = document.getElementById(id)
+        x.on = x.addEventListener
+        x.off = x.removeEventListener
+        return x
     }
+    
+    var showAuthAfterSetup = false, waitingForSetup = false
+    if(localStorage.getItem("groups") === null) { // fresh user
+        getNode('setup').style.display = 'block'
+        waitingForSetup = true
+
+        getNode('accept').on('click', function() {
+            var password = getNode('password').value
+            var password2 = getNode('password2').value
+            if(password === password2) {
+                webkey.utils.changePassword(undefined,password)
+                getNode('setup').style.display = 'none'
+                if(showAuthAfterSetup) getNode('authorize').style.display = 'block'
+                showAuthAfterSetup = false
+            } else {
+                getNode('password2Error').innerText = "Passwords don't match"
+            }
+        })
+
+        var passchange;
+        getNode('password').on('keydown', passchange=function() {
+            getNode('password2Error').innerText = ""
+        })
+        getNode('password2').on('keydown', passchange)
+    }
+
+    getNode('passwordReentry').on('keydown', function() {
+        getNode('passwordWarning').style.display = 'none'
+    })
 
     window.addEventListener("message", function(message) {
         var params = JSON.parse(message.data)
@@ -92,12 +134,33 @@
         }
 
         if(origin !== undefined) {
-            document.getElementById('warning').innerText = "Clicking 'Authorize' gives "+origin+" your email address"
+            getNode('warning').innerText = "Clicking 'Authorize' gives "+origin+" your email address"
         }
 
         webkey.commands.handle(message, function getAcceptance(callback) {
-            document.getElementById('auth').addEventListener('click', function() {
+            if(waitingForSetup)
+                showAuthAfterSetup = true
+            else
+                getNode('authorize').style.display = 'block'
+
+            getNode('auth').on('click', function() {
                 callback(undefined)
+            })
+        }, function getPassword(callback) {
+            getNode('passwordReup').style.display = 'block'
+
+            var listener;
+            getNode('acceptReentry').on('click', listener=function() {
+                var password = getNode('passwordReentry').value
+                if(webkey.utils.validatePassword(password)) {
+                    callback(undefined, password)
+                    getNode('acceptReentry').off('click', listener)
+                    getNode('passwordReup').style.display = 'none'
+                } else {
+                    getNode('passwordNote').style.display = 'none'
+                    getNode('passwordWarning').innerText = 'Incorrect password'
+                    getNode('passwordWarning').style.display = 'inline'
+                }
             })
         })
     })

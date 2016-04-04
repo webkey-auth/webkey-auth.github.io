@@ -1,9 +1,7 @@
 var webkeyUtils = require('./utils')
 
-var password = "mypassword" // todo: remove this
-
 var currentlyAuthing = false
-exports.handle = function(message, getAcceptance) {
+exports.handle = function(message, getAcceptance, getPassword) {
     var callback = function(error, response) {
         message.source.postMessage(JSON.stringify(response), message.origin);
         currentlyAuthing = false
@@ -20,12 +18,19 @@ exports.handle = function(message, getAcceptance) {
                     message.source.postMessage(JSON.stringify({response: 'auth', accepted:true}), message.origin);
                 }
 
-                auth(message.origin, params.token, getAcceptance, onAccept, callback)
-            } else if(params.c === 'getAcceptance' && message.origin === document.location.origin) {
-                getAcceptance(function(err) {
-                    if(err) callback(err)
-                    else    callback(undefined, {response: 'getAcceptance', accepted: true})
-                })
+                auth(message.origin, params.token, getAcceptance, getPassword, onAccept, callback)
+            } else if(message.origin === document.location.origin) {
+                if(params.c === 'getAcceptance') {
+                    getAcceptance(function(err) {
+                        if(err) callback(err)
+                        else    callback(undefined, {response: 'getAcceptance', accepted: true})
+                    })
+                } else if(params.c === 'getPassword') {
+                    getPassword(function(err, password) {
+                        if(err) callback(err, password)
+                        else    callback(undefined, {response: 'getPassword', password: password})
+                    })
+                }
             } else {
                 throw new Error("Invalid command: '"+params.c+"'")
             }
@@ -36,7 +41,7 @@ exports.handle = function(message, getAcceptance) {
     }
 }
 
-function auth(origin, token, getAcceptance, onAccept, callback) {
+function auth(origin, token, getAcceptance, getPassword, onAccept, callback) {
 
     var getProof = function(password) {
         var group = webkeyUtils.getGroup(origin, password)
@@ -56,7 +61,10 @@ function auth(origin, token, getAcceptance, onAccept, callback) {
         getProof()
     } catch(e) {
         if(e.message === "passwordNeeded") {
-            return getProof(password)
+            return getPassword(function(err, password){
+                if(err) callback(err)
+                getProof(password)
+            })
         } else {
             throw e
         }

@@ -76,7 +76,7 @@ and webkey will respond with a `window` "message" event with some JSON stringifi
 Responses:
 
 * `{response:'auth', accepted: true}` - Tells the host that the user accepted the request and is now creating proof of authentication.
-* `{response:'auth', proof:_, email:_}` - The result of an accepted auth command. The `proof` property will hold the token signed with the user's private key, `email` will hold the user's email.
+* `{response:'auth', proof:_, email:_, publicKey:_}` - The result of an accepted auth command. The `proof` property will hold the token signed with the user's private key, `email` will hold the user's email.
 * `{response:'rejected'}` - The user rejected the auth request.
 * `{response:'error', message:_}` - An error response. The message will have some hopefully useful message.
 
@@ -101,6 +101,44 @@ In this case, there are two relevant people/groups you're trusting by using webk
 2. Github - Since github is currently hosting this, you have to trust them
 
 Hopefully someday browsers will implement this natively so these two pieces of trust can go away.
+
+Tradeoffs
+=========
+
+* The user's derived AES key is stored in hashed form via pbkdf2 in browser localStorage
+    * This means they're on the disk, and that if you don't explicitly log out, they will persist on the disk indefinitely past their expiration date if webkey-auth.github.io isn't accessed by the user for a long time.
+        * One workaround might be to require that a user keep a webkey window open, and once that window closes they would be logged out. That window could communicate the user's key via temporary use of localStorage or webRTC.
+        * If there was a browser storage method like localStorage that was destroyed on browser-quit - that would be ideal. But to my knowledge, that doesn't exist.
+    * It might not be so bad since the key needs to be kept in plaintext somewhere or you wouldn't be able to auto-auth. Also, if someone has access to your harddrive, they probably also have access to memory. (Please speak up if you think i'm incorrect here)
+    * Since the key is derived using pbkdf2, which uses HMAC, the user's key can't be found out (this matters if they're using that key for other things, against recommendations)
+*
+
+Recommendations
+===============
+
+### Identity Recovery
+
+Just like you need password recovery when a user loses their password, you need identity recovery when a user loses their rsa keys or is using your website from a new device.
+To do identity recovery, simply send that person an email with a link to connect their new public key with their old identity. Remember that users can have multiple public keys (at least one for every device).
+
+### Auth on Multiple Devices
+
+When a user auth's on multiple devices, their email can identify them, but they will have a different public key.
+This should work exactly like identity recovery.
+
+Todo
+========
+
+* Import and export rsa keys
+* Groups - will allow users to have multiple identities with separate emails and rsa keys
+* On setup, allow the user to a "secure image" so there's a visual way to tell that you're using the right service. Mitigates phishing attacks.
+* Validation tests - Create some files that developers integrating with webkey can use to verify that they're verifying auth correctly and handling edge cases.
+
+In consideration:
+    * Temporary authentication - This would be some way to auth on another person's machine. I think a better way of doing this is that the website send you an email with a temporary auth link, and this wouldn't go through webkey at all.
+    * Online key storage - Allow users to save their keys online with a password - making sure to warn them that this means they need to trust
+the service to keep your keys safe, since even tho the keys are encrypted its only as strong as their password is, which is
+orders of magnitude weaker than the RSA keys.
 
 How to Contribute!
 ============

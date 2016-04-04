@@ -15,7 +15,12 @@ exports.handle = function(message, getAcceptance) {
             if(params.c === 'auth') {
                 if(currentlyAuthing) return // ignore, we're already handling it bro, calm yourself
                 currentlyAuthing = true
-                auth(message.origin, params.token, getAcceptance, callback)
+
+                var onAccept = function() {
+                    message.source.postMessage(JSON.stringify({response: 'auth', accepted:true}), message.origin);
+                }
+
+                auth(message.origin, params.token, getAcceptance, onAccept, callback)
             } else if(params.c === 'getAcceptance' && message.origin === document.location.origin) {
                 getAcceptance(function(err) {
                     if(err) callback(err)
@@ -31,15 +36,17 @@ exports.handle = function(message, getAcceptance) {
     }
 }
 
-function auth(origin, token, getAcceptance, callback) {
+function auth(origin, token, getAcceptance, onAccept, callback) {
 
     var getProof = function(password) {
         var group = webkeyUtils.getGroup(origin, password)
         if(group !== undefined && group.autoAuth) {
+            onAccept()
             webkeyUtils.acceptAuthRequest(origin, group, token, password, callback)
         } else {
             getAcceptance(function(err) {
                 if(err) callback(err)
+                onAccept()
                 webkeyUtils.acceptAuthRequest(origin, group, token, password, callback)
             })
         }

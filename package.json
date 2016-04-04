@@ -15,7 +15,8 @@
      "webpack": "*",
      "deadunit": "*",
      "build-modules":"2.0.5",
-     "colors":"*"
+     "colors":"*",
+     "pem":"*"
  },
  "repository": {
    "type": "git",

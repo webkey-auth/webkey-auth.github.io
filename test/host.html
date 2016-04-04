@@ -3,7 +3,7 @@
 </body>
 <script>
     var guestDomain = "https://webkey-auth.github.io"
-//    var guestDomain = "http://localhost:8100"
+//    var guestDomain = "https://localhost:8100"
 
     var webkeyFrame = document.createElement('iframe')
     webkeyFrame.src = guestDomain+'/guest.html'
@@ -21,8 +21,13 @@
             })
 
         } else if(response.response === 'auth') {
-            console.log("Got the proof: ")
-            console.dir(response)
+            if(response.accepted) {
+                document.getElementById('a').innerText = "Logging in..."
+            } else {
+                console.log("Got the proof: ")
+                console.dir(response)
+                document.getElementById('a').innerText = "Logged in!"
+            }
         } else {
             console.log(response)
         }

@@ -75,6 +75,7 @@ and webkey will respond with a `window` "message" event with some JSON stringifi
 
 Responses:
 
+* `{response:'auth', accepted: true}` - Tells the host that the user accepted the request and is now creating proof of authentication.
 * `{response:'auth', proof:_, email:_}` - The result of an accepted auth command. The `proof` property will hold the token signed with the user's private key, `email` will hold the user's email.
 * `{response:'rejected'}` - The user rejected the auth request.
 * `{response:'error', message:_}` - An error response. The message will have some hopefully useful message.

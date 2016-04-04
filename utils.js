@@ -10,13 +10,12 @@ var groupsCache; // keeps the plaintext groups in memory very temporarily (for p
 
 var utils = exports
 
-if(document.location.protocol !== 'https') throw new Error(document.location.protocol+" isn't secure - use https only")
-
 try {
     var createProofWorker = new Worker("createProofWorker.js")
+    if(document.location.protocol !== 'https:') throw new Error(document.location.protocol+" isn't secure - use https only")
 } catch(e) {
     if(!(e instanceof ReferenceError)) throw e
-    // ignore ReferenceError - Worker won't be defined inside a worker
+    // ignore ReferenceError - Worker and document won't be defined inside a worker
 }
 
 exports.changePassword = function(oldPassword, newPassword) {

@@ -80,8 +80,7 @@ exports.acceptAuthRequest = function(origin, group, token, password, callback) {
     }
 
     utils.createProofWorker(group.keyPair, origin, token, function(err, proof) {
-        alert("took: "+(Date.now()-start)+'ms')
-        callback(err, {response:'auth', proof:proof})
+        callback(err, {response:'auth', proof:proof, time:(Date.now()-start)})
     })
 }
 

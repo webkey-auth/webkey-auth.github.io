@@ -2,10 +2,11 @@
     <div id="a">Click me</div>
 </body>
 <script>
-    var guestDomain = "http://localhost:8100"
+    var guestDomain = "http://webkey-auth.github.io"
+//    var guestDomain = "http://localhost:8100"
 
     var webkeyFrame = document.createElement('iframe')
-    webkeyFrame.src = '../guest.html'
+    webkeyFrame.src = guestDomain+'/guest.html'
     webkeyFrame.style.display = 'none'
 
     var token = Math.random().toString()

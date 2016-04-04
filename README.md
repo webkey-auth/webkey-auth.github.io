@@ -28,22 +28,36 @@ Client Usage
 
 Bare necessities:
 ```
-<iframe id='x' style="display:none;" src="https://webkey.github.io/login"></iframe>
-
+<body><div id="a">Click to login</div></body>
 <script>
-    var webkey = document.getElementById('x').contentWindow
+    var guestDomain = "http://webkey-auth.github.io"
+
+    var webkeyFrame = document.createElement('iframe')
+    webkeyFrame.src = guestDomain+'/guest.html'
+    webkeyFrame.style.display = 'none'
+
     var token = Math.random().toString()
     window.addEventListener("message", function(message){
-        if (message.origin !== "https://webkey.github.io/") return // not from the right place
+        if (message.origin !== guestDomain) return // not from the right place
 
         var response = JSON.parse(message.data)
+        if(response.ready) {
+            document.getElementById('a').addEventListener('click', function() {
+                var webkey = webkeyFrame.contentWindow
+                webkey.postMessage(JSON.stringify({c:'auth', token: token}),guestDomain)
+            })
 
-        // identify the user using response.publicKey
-        // authenticate the user by decrypting response.proof with the public key and ensuring the result is equal to the original `token`
-        // this step would almost definitely be done on a server after sending the message data there
-    });
+        } else if(response.response === 'auth') {
+            console.log("Got the proof: ")
+            console.dir(response)
+        } else {
+            console.log(response)
+        }
+    })
 
-    webkey.postMessage(JSON.stringify({c:'auth', token: token}),"https://webkey.github.io/")
+
+    document.body.appendChild(webkeyFrame)
+
 </script>
 ```
 

@@ -30,7 +30,7 @@ Bare necessities:
 ```
 <body><div id="a">Click to login</div></body>
 <script>
-    var guestDomain = "http://webkey-auth.github.io"
+    var guestDomain = "https://webkey-auth.github.io"
 
     var webkeyFrame = document.createElement('iframe')
     webkeyFrame.src = guestDomain+'/guest.html'
@@ -79,10 +79,16 @@ Responses:
 * `{response:'rejected'}` - The user rejected the auth request.
 * `{response:'error', message:_}` - An error response. The message will have some hopefully useful message.
 
+Pages
+=======
+
+* guest.html - This provides access to the auth command.
+* logout.html - Going to this page "logs you out", so that new auth requests will require password re-entry.
+
 Server Usage
 ============
 
-If you'd like to *host* your own webkey server, all you have to do is host the file `dist/webkey.html` on any webserver.
+If you'd like to *host* your own webkey server, all you have to do is host this repository on any webserver over https.
 
 Trust
 ======

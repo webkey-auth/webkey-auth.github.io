@@ -10,6 +10,8 @@ var groupsCache; // keeps the plaintext groups in memory very temporarily (for p
 
 var utils = exports
 
+if(document.location.protocol !== 'https') throw new Error(document.location.protocol+" isn't secure - use https only")
+
 try {
     var createProofWorker = new Worker("createProofWorker.js")
 } catch(e) {

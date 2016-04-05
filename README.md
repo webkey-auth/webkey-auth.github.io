@@ -92,10 +92,13 @@ Pages
 Server Usage
 ============
 
-If you'd like to *host* your own webkey server, all you have to do is host this repository on any webserver over https.
+I don't recommend anyone host their own webkey server, for the sake of the users.
 
-Why host your own server? The only reason is if you don't want to trust me or github.
-Otherwise, if multiple sites used webkey from a central domain, user experience would be faster since the necessary files would be far more likely to be cached.
+A. If multiple webkey hosts are floating around the internet, its not really single sign-on anymore. A user will have to type a password once for every different webkey host their websites are using.
+B. Also, user experience would be worse since the necessary files would be less likely to be cached.
+
+If you do still want to host your own webkey server, all you have to do is host this repository on any webserver over https.
+But, please, think of the users! The only reason is if you don't want to trust me or github.
 
 Trust
 ======

@@ -1,3 +1,4 @@
+**Status**: In review. **NOT production ready.**
 
 `webkey`
 =====
@@ -110,13 +111,12 @@ Hopefully someday browsers will implement this natively so these two pieces of t
 Tradeoffs
 =========
 
-* The user's derived AES key is stored in hashed form via pbkdf2 in browser localStorage
-    * This means they're on the disk, and that if you don't explicitly log out, they will persist on the disk indefinitely past their expiration date if webkey-auth.github.io isn't accessed by the user for a long time.
-        * One workaround might be to require that a user keep a webkey window open, and once that window closes they would be logged out. That window could communicate the user's key via temporary use of localStorage or webRTC.
-        * If there was a browser storage method like localStorage that was destroyed on browser-quit - that would be ideal. But to my knowledge, that doesn't exist.
-    * It might not be so bad since the key needs to be kept in plaintext somewhere or you wouldn't be able to auto-auth. Also, if someone has access to your harddrive, they probably also have access to memory. (Please speak up if you think i'm incorrect here)
-    * Since the key is derived using pbkdf2, which uses HMAC, the user's key can't be found out (this matters if they're using that key for other things, against recommendations)
-*
+The user's derived AES key is stored in hashed form via pbkdf2 in browser localStorage
+* This means they're on the disk, and that if you don't explicitly log out, they will persist on the disk indefinitely past their expiration date if webkey-auth.github.io isn't accessed by the user for a long time.
+    * One workaround might be to require that a user keep a webkey window open, and once that window closes they would be logged out. That window could communicate the user's key via temporary use of localStorage or webRTC.
+    * If there was a browser storage method like localStorage that was destroyed on browser-quit - that would be ideal. But to my knowledge, that doesn't exist.
+* It might not be so bad since the key needs to be kept in plaintext somewhere or you wouldn't be able to auto-auth. Also, if someone has access to your harddrive, they probably also have access to memory. (Please speak up if you think i'm incorrect here)
+* Since the key is derived using pbkdf2, which uses HMAC, the user's key can't be found out (this matters if they're using that key for other things, against recommendations)
 
 Recommendations
 ===============

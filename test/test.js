@@ -20,6 +20,7 @@ window.addEventListener("message", function(message){
             console.log("Got the proof: ")
             console.dir(response)
 
+            // test verification - IMPORTANT: NEVER VERIFY IN BROWSER IN A REAL APPLICATION (ie don't trust your client to tell you whether you're logged in, always verify server-side)
             var pair = new webkey.utils.rsa({environment: 'browser'})
             pair.importKey(response.publicKey, 'pkcs8-public')
             var x = pair.verify(token,response.proof,'utf8', 'base64')

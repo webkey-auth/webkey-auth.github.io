@@ -122,14 +122,20 @@ exports.getKeyPair = function(privateKeyPem) {
 
 // gets a random string consisting of 0-9, A-Z, and a-p
 function createRandomString(length) {
-    var array = new Uint8Array(length/2+1);
+    if(length%2 === 0) {
+        var arrayLength = length/2
+    } else {
+        var arrayLength = length/2+1
+    }
+
+    var array = new Uint8Array(arrayLength);
     crypto.getRandomValues(array);
 
     var chars = []
     array.forEach(function(value, n) {
         var high4Bits = value >> 4
         chars.push(String.fromCharCode(high4Bits+48))
-        if(n+1 < length) {
+        if(n*2+1 < length) {
             var low4Bits = value & 0x0F
             chars.push(String.fromCharCode(low4Bits+48))
         }

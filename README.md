@@ -23,10 +23,35 @@ Webkey provides a far more secure and convenient way to authenticate users.
 The user can use whatever low-entropy key they want to client-side because that key never leaves their machine.
 In cryptography, if an attacker has access to your machine, that's already game over.
 
+### Why not mutual ssl client-side certificates?
+
+Browsers have absolutely awful UI for client-side certs, which is why almost [no one uses them](https://web.archive.org/web/20160304045556/http://pilif.github.io/2008/05/why-is-nobody-using-ssl-client-certificates/).
+While mutual ssl certs can be password protected, the UI doesn't encourage it. By contrast, webkey requires it.
+Where mutual ssl certs are confusing for normal users to manage, webkey isn't.
+The advantages of client-side certs is that it has access to a secure store (webkey currently has to use localStorage), it uses a clearly non-webpage UI and so has a marginally lower chance of successful phishing attacks, and its faster.
+But since browser client-side certs have failed to make headway thus far, usability is a huge security win because it means people will actually do the more secure thing.
+
+### Why not Oauth?
+
+[Oauth](http://stackoverflow.com/questions/4727226/on-a-high-level-how-does-oauth-2-work) is really all about giving restricted access to your account to a third party.
+Webkey is only about identifying and authenticating a user. Its much less complicated.
+
+With oauth, even if you 100% trust your oauth provider (which you still have to do with webkey), you still have to give your oauth provider a username and password.
+Its ironic that the same "password-antipattern" that oauth solves itself has to use the password anti-pattern.
+Webkey also requires a password, but that password is never sent over the internet and webkey doesn't make you input a username - one less thing to type in and think about for users.
+
+And oauth is a complicated protocol with a lot of moving parts and multiple flows. Webkey has one flow and no private credentials being passed around.
+There's a reason we use ssh keys for terminal access and not oauth.
+
+Also, a lot of people just don't want google and facebook to manage their identities.
+Some people don't want google or facebook to know what websites they go to for example.
+And yet people still use oauth because they hate remembering and entering passwords.
+As a statically hosted open-source application, webkey can solve both problems.
+
 Authentication Steps
 ====================
 
-1. On the client, request the user's acceptance (`requestAcceptance` command) and sent the resulting email and public key to the server
+1. On the client, request the user's acceptance (`requestAcceptance` command) and send the resulting email and public key to the server
 2. On the **server**,
     * if that email is not already in the system with that public key, send them a verification email (if you want) and once verified, associate the email and public key in your database and skip to step 7
     * if that email *is* in the system with that public key, continue to step 3
@@ -156,11 +181,12 @@ Todo
 * Validation tests - Create some files that developers integrating with webkey can use to verify that they're verifying auth correctly and handling edge cases.
 
 In consideration:
-    * Temporary authentication - This would be some way to auth on another person's machine. I think a better way of doing this is that the website send you an email with a temporary auth link, and this wouldn't go through webkey at all.
-    * Online key storage - Allow users to save their keys online with a password - making sure to warn them that this means they need to trust
+
+* Temporary authentication - This would be some way to auth on another person's machine. I think a better way of doing this is that the website send you an email with a temporary auth link, and this wouldn't go through webkey at all.
+* Key syncing between devices - I'm currently thinking this isn't worth doing.
+* Online key storage - Allow users to save their keys online with a password - making sure to warn them that this means they need to trust
 the service to keep your keys safe, since even tho the keys are encrypted its only as strong as their password is, which is
-orders of magnitude weaker than the RSA keys.
-    * Key syncing between devices - I'm currently thinking this isn't worth doing.
+orders of magnitude weaker than the RSA keys. Also don't think this is worth it.
 
 How to Contribute!
 ============

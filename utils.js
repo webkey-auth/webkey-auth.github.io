@@ -120,7 +120,7 @@ exports.getKeyPair = function(privateKeyPem) {
     return pair
 }
 
-// gets a random string consisting of 0-9, A-Z, and a-p (essentially a base64 encoded number)
+// gets a random string consisting of 0-9, A-Z, and a-p
 function createRandomString(length) {
     var array = new Uint8Array(length/2+1);
     crypto.getRandomValues(array);

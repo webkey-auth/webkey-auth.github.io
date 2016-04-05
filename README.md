@@ -23,6 +23,14 @@ Webkey provides a far more secure and convenient way to authenticate users.
 The user can use whatever low-entropy key they want to client-side because that key never leaves their machine.
 In cryptography, if an attacker has access to your machine, that's already game over.
 
+Authentication Steps
+====================
+
+1. On the **server**, generate a 3-20 character `token` (in string form) and send it to the client
+2. On the client, send the `token` into webkey's iframe using the `'auth'` postMessage command
+3. On the client, receive the signed token (called the `proof`) from webkey and send that `proof` to the server.
+4. On the **server**, verify (the server should *still* have the original `token` - do NOT trust any tokens sent to the server by the client)
+5. Profit! Your user's now authenticated!
 
 Client Usage
 ============
@@ -39,7 +47,7 @@ The bare necessities:
     webkeyFrame.src = guestDomain+'/guest.html'
     webkeyFrame.style.display = 'none'
 
-    var token = Math.random().toString()
+    var token = getTokenFromServer() // the server should send down something like Math.random().toString()
     window.addEventListener("message", function(message){
         if (message.origin !== guestDomain) return // not from the right place
 
@@ -53,11 +61,11 @@ The bare necessities:
         } else if(response.response === 'auth') {
             console.log("Got the proof: ")
             console.dir(response)
+            verifyProofOnServer(response.proof)// now send the proof to the server to be verified
         } else {
             console.log(response)
         }
     })
-
 
     document.body.appendChild(webkeyFrame)
 

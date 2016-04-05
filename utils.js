@@ -120,12 +120,20 @@ exports.getKeyPair = function(privateKeyPem) {
     return pair
 }
 
+// gets a random string consisting of 0-9, A-Z, and a-p - essentially a base64 encoded number
 function createRandomString(length) {
-    var possible = 122-48
+    var array = new Uint8Array(length/2+1);
+    crypto.getRandomValues(array);
+
     var chars = []
-    for(var n=0; n<length; n++) {
-        chars.push(String.fromCharCode(Math.floor(Math.random() * possible)+48))
-    }
+    array.forEach(function(value, n) {
+        var high4Bits = value >> 4
+        chars.push(String.fromCharCode(high4Bits+48))
+        if(n+1 < length) {
+            var low4Bits = value & 0x0F
+            chars.push(String.fromCharCode(low4Bits+48))
+        }
+    })
 
     return chars.join('')
 }

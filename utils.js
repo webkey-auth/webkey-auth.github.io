@@ -4,6 +4,7 @@ var aes = require('aes-js')
 var pbkdf2 = require('pbkdf2/browser')
 
 var hours = 1000*60*60
+var rsaBits = 1024
 
 var groupsCache; // keeps the plaintext groups in memory very temporarily (for performance reasons)
 
@@ -46,7 +47,7 @@ var getGroups = exports.getGroups = function(password) {
 }
 
 exports.createNewGroup = function(name, email, password, autoAuth) {
-    var pair = new rsa({b: 512, environment: 'browser'});
+    var pair = new rsa({b: rsaBits, environment: 'browser'});
 
     var groups = getGroups(password)
 

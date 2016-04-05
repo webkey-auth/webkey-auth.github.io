@@ -11,9 +11,7 @@ Subsequent authentications can be done automatically if the user leaves "auto-au
 Webkey uses RSA generated within the browser itself and stored in an encrypted form in the browsers LocalStorage.
 Neither the user's private key nor the passphrase used to encrypt their private key is ever transmitted over the wire - even in encrypted form.
 
-
-Screenshot goes here
-===================
+<Screenshot goes here>
 
 Motivation
 ==========
@@ -48,6 +46,7 @@ Some people don't want google or facebook to know what websites they go to for e
 And yet people still use oauth because they hate remembering and entering passwords.
 As a statically hosted open-source application, webkey can solve both problems.
 
+
 Authentication Steps
 ====================
 
@@ -55,7 +54,7 @@ Authentication Steps
 2. On the **server**,
     * if that email is not already in the system with that public key, send them a verification email (if you want) and once verified, associate the email and public key in your database and skip to step 7
     * if that email *is* in the system with that public key, continue to step 3
-3. On the **server**, generate a 3-20 character `token` (in string form) and send it to the client
+3. On the **server**, generate a 16-32 character `token` (in string form) and send it to the client
 4. On the client, send the `token` into webkey's iframe using the `'auth'` postMessage command
 5. On the client, receive the signed token (called the `proof`) from webkey and send that `proof` to the server.
 6. On the **server**, verify that the token with the given public key (the server should *still* have the original `token` - do NOT trust any tokens sent to the server by the client)
@@ -111,14 +110,27 @@ webkey.postMessage(JSON.stringify({c: commandName, additional:parameters...}),"h
 
 and webkey will respond with a `window` "message" event with some JSON stringified response data as shown above.
 
-* `{command:'auth', token:_}` - Asks webkey for the user's public key and proof of identity. Response will be `{publicKey:_, proof:_}` where `proof` is the `token` encrypted (aka signed) with the user's private key.
+**requestAcceptance**:
+Request: `{command:'requestAcceptance'}` - Asks webkey for the user's public key and proof of identity. Response will be `{publicKey:_, proof:_}` where `proof` is the `token` encrypted (aka signed) with the user's private key.
+Success response:
 
+**auth**:
+Request: `{command:'auth', token:_}` - Asks webkey for the user's public key and proof of identity. Response will be `{publicKey:_, proof:_}` where `proof` is the `token` encrypted (aka signed) with the user's private key.
 Responses:
+* `{response:'auth', accepted: true, email:_, publicKey:_}` - Tells the host that the user accepted the request.
+* `{response:'auth', proof:_}` - The result of an accepted auth command. The `proof` property will hold the token signed with the user's private key, `email` will hold the user's email.
+Errors:
+* `message: 'rejected'` - The user rejected the auth request.
 
-* `{response:'auth', accepted: true}` - Tells the host that the user accepted the request and is now creating proof of authentication.
-* `{response:'auth', proof:_, email:_, publicKey:_}` - The result of an accepted auth command. The `proof` property will hold the token signed with the user's private key, `email` will hold the user's email.
-* `{response:'error', message:_}` - An error response. The message will have some hopefully useful message.
-    * `message: 'rejected'` - The user rejected the auth request.
+Errors:
+
+Error responses have the following form:
+
+`{response:'error', message:_}` - The message will have some hopefully useful message.
+
+Other Messages:
+
+* `{ready:true}` - Sent by webkey when the page is ready to receive commands
 
 Pages
 =======
@@ -151,6 +163,9 @@ Hopefully someday browsers will implement this natively so these two pieces of t
 Tradeoffs
 =========
 
+The user's auth is stored permenantly somewhere on the machine, rather than being permanently stored only in a person's head like a password.
+* This makes webkey more vulnerable to brute force and heuristic attacks than server-based password auth. Using an additional PIN can mitigate this.
+
 The user's derived AES key is stored in hashed form via pbkdf2 in browser localStorage
 * This means they're on the disk, and that if you don't explicitly log out, they will persist on the disk indefinitely past their expiration date if webkey-auth.github.io isn't accessed by the user for a long time.
     * One workaround might be to require that a user keep a webkey window open, and once that window closes they would be logged out. That window could communicate the user's key via temporary use of localStorage or webRTC.
@@ -171,6 +186,43 @@ To do identity recovery, simply send that person an email with a link to connect
 When a user auth's on multiple devices, their email can identify them, but they will have a different public key.
 This should work exactly like identity recovery.
 
+### Additional security
+
+Since brute force attacks are far more unlikely to succeed on servers that limit the number of password attempts for a user,
+a PIN can provide additional security that covers this drawback of webkey.
+
+### Login / Sign Up
+
+An application won't know whether the user has authed with that application before they request auth, so the best messaging to the user is probably to include both in the same button: "Login/Sign-up".
+
+Browser features I wish existed
+===============================
+
+1. #1 is obviously native webkey. Since browser client-side certs aren't in a usable state at the moment, if they were, webkey wouldn't even be necessary.
+2. Secure in-memory storage. I wish this had gotten off the ground: https://www.nczonline.net/blog/2010/04/13/towards-more-secure-client-side-data-storage/
+
+What about NCC Group's "Javascript Cryptography Considered Harmful" article?
+============================================================================
+
+Man have I seen a link to [this article](https://www.nccgroup.trust/us/about-us/newsroom-and-events/blog/2011/august/javascript-cryptography-considered-harmful/) a lot lately.
+Here are its arguments distilled down:
+
+1. Secure delivery of javascript over SSL is "hard" - "You have to send all the page contentover SSL/TLS. Otherwise, attackers will hijack the crypto code"
+2. Page resources loaded from various places around the internet can change the execution environment, including crypto functions
+3. Lack of systems programming primitives needed to implement crypto, like a secure random number generator, secure erase, a secure keystore, and "functions with known timing characteristics".
+4. The ability to reliably identify which clients can be safely communicated with "is unsolved even in the academic literature"
+5. The ability to fall back on a worse-but-acceptable solution implies that you should just always use that worse solution.
+
+I should note that the article considers non-browser javascript "perilous, but not doomed" - ie not considered necessarily harmful.
+
+I'll take these point. If I've missed any points from the article in my above list, please let me know.
+
+1. Webkey sends all its page content over SSL, just like that page says you need to.
+2. Webkey doesn't load any external resources, so there's no uncontrolled code that could change the execution environment unless github.com itself decided to hijack webkey.
+3. Its not 2011 anymore. Javascript now has a [secure random number generator](https://developer.mozilla.org/en-US/docs/Web/API/RandomSource/getRandomValues) and various cryptography functions implemented natively and accessible via the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API). Javascript still doesn't have secure erase or a secure keystore, but this has the same security implications with your usernames and passwords as it does for `webkey` key-pairs. So if anything, webkey is at worst just as bad as current username/password solutions in this regard.
+4. An application server using webkey can verify that a client can be safely communicated with by virtue of the client sending back a signature verifiable on the server. Perhaps I'm misunderstanding what exactly is "unsolved even in the academic literature", so I'd appreciate some clarification there.
+5. Worse options are worse, even in security. In this case, not only is the worse option (username/password auth) less secure, but its also less convenient for users. I think this is the only argument in that article that I don't think holds any water even in the world of 2011 javascript crytpo.
+
 Todo
 ========
 
@@ -179,6 +231,8 @@ Todo
 * Groups - will allow users to have multiple identities with separate emails and rsa keys
 * On setup, allow the user to a "secure image" so there's a visual way to tell that you're using the right service. Mitigates phishing attacks.
 * Validation tests - Create some files that developers integrating with webkey can use to verify that they're verifying auth correctly and handling edge cases.
+* Once `crypto.subtle` becomes more widely available, use those methods instead of the user-space libraries (for speed and probably security)
+* Add helper functions to
 
 In consideration:
 
@@ -187,9 +241,12 @@ In consideration:
 * Online key storage - Allow users to save their keys online with a password - making sure to warn them that this means they need to trust
 the service to keep your keys safe, since even tho the keys are encrypted its only as strong as their password is, which is
 orders of magnitude weaker than the RSA keys. Also don't think this is worth it.
+* A command that allows the application to ask if the user has authed with this site before
 
 How to Contribute!
 ============
+
+I'm looking for contributors, especially security experts. Please create an issue or contact me some other way if you'd like to contribute.
 
 Anything helps:
 

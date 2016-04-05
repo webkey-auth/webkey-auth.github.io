@@ -6,6 +6,13 @@
                 "width="+width+",height="+height+",left="+(screen.width/2-width/2)+",top="+(screen.height/2-height)
         )
 
+        var authed = false
+        authorizeWindow.onbeforeunload = function() {
+            if(!authed) {
+                callback(new Error("rejected"))
+            }
+        }
+
         window.addEventListener("message", function(message){
             if(message.origin !== document.location.origin) return // ignore
 
@@ -14,6 +21,7 @@
 
             if(params.response === commandParams.c) {
                 callback(undefined, params.password)
+                authed = true
                 authorizeWindow.close()
             } else if(params.ready) {
                 authorizeWindow.postMessage(JSON.stringify(commandParams), document.location.origin)

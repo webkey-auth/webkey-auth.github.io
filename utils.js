@@ -11,13 +11,13 @@ var utils = exports
 exports.rsa = rsa
 exports.aes = aes
 
-//try {
-//    var createProofWorker = new Worker("createProofWorker.js")
+try {
+    var createProofWorker = new Worker("createProofWorker.js")
     if(document.location.protocol !== 'https:') throw new Error(document.location.protocol+" isn't secure - use https only")
-//} catch(e) {
-//    if(!(e instanceof ReferenceError)) throw e
-//    // ignore ReferenceError - Worker and document won't be defined inside a worker
-//}
+} catch(e) {
+    if(!(e instanceof ReferenceError)) throw e
+    // ignore ReferenceError - Worker and document won't be defined inside a worker
+}
 
 exports.changePassword = function(oldPassword, newPassword) {
     var groups = getGroups(oldPassword)
@@ -62,13 +62,13 @@ exports.createProof = function(keyPair, token) {
     return keyPair.sign(token,'base64','utf8')
 }
 
-//exports.createProofWorker = function(keyPair, origin, token, callback) {
-//    createProofWorker.onmessage = function(result) {
-//        callback(undefined, result)
-//    }
-//
-//    createProofWorker.postMessage([keyPair, origin, token])
-//}
+exports.createProofWorker = function(serializedKeyPair, token, callback) {
+    createProofWorker.onmessage = function(result) {
+        callback(undefined, result.data)
+    }
+
+    createProofWorker.postMessage([serializedKeyPair, token])
+}
 
 
 exports.acceptAuthRequest = function(origin, group, token, password, callback) {
@@ -79,13 +79,10 @@ exports.acceptAuthRequest = function(origin, group, token, password, callback) {
         localStorage.setItem(origin, group.id)
     }
 
-    var keyPair = getKeyPair(group.keyPair)
-    var proof = utils.createProof(keyPair, token)
-    callback(undefined, {response:'auth', proof:proof, time:(Date.now()-start), publicKey:keyPair.exportKey('pkcs8-public')})
-
-//    utils.createProofWorker(group.keyPair, origin, token, function(err, proof) {
-//        callback(err, {response:'auth', proof:proof, time:(Date.now()-start), publicKey:group.keyPair.exportKey('pkcs8')})
-//    })
+    utils.createProofWorker(group.keyPair, token, function(err, proof) {
+        var keyPair = utils.getKeyPair(group.keyPair)
+        callback(err, {response:'auth', proof:proof, time:(Date.now()-start), publicKey:keyPair.exportKey('pkcs8-public')})
+    })
 }
 
 exports.validatePassword = function(password) {
@@ -117,7 +114,7 @@ var getGroup = exports.getGroup = function(origin,password) {
     }
 }
 
-function getKeyPair(privateKeyPem) {
+exports.getKeyPair = function(privateKeyPem) {
     var pair = new rsa({environment: 'browser'})
     pair.importKey(privateKeyPem, 'pkcs8')
     return pair

@@ -26,11 +26,15 @@ In cryptography, if an attacker has access to your machine, that's already game 
 Authentication Steps
 ====================
 
-1. On the **server**, generate a 3-20 character `token` (in string form) and send it to the client
-2. On the client, send the `token` into webkey's iframe using the `'auth'` postMessage command
-3. On the client, receive the signed token (called the `proof`) from webkey and send that `proof` to the server.
-4. On the **server**, verify (the server should *still* have the original `token` - do NOT trust any tokens sent to the server by the client)
-5. Profit! Your user's now authenticated!
+1. On the client, request the user's acceptance (`requestAcceptance` command) and sent the resulting email and public key to the server
+2. On the **server**,
+    * if that email is not already in the system with that public key, send them a verification email (if you want) and once verified, associate the email and public key in your database and skip to step 7
+    * if that email *is* in the system with that public key, continue to step 3
+3. On the **server**, generate a 3-20 character `token` (in string form) and send it to the client
+4. On the client, send the `token` into webkey's iframe using the `'auth'` postMessage command
+5. On the client, receive the signed token (called the `proof`) from webkey and send that `proof` to the server.
+6. On the **server**, verify that the token with the given public key (the server should *still* have the original `token` - do NOT trust any tokens sent to the server by the client)
+7. Profit! Your user's now authenticated!
 
 Client Usage
 ============
@@ -88,8 +92,8 @@ Responses:
 
 * `{response:'auth', accepted: true}` - Tells the host that the user accepted the request and is now creating proof of authentication.
 * `{response:'auth', proof:_, email:_, publicKey:_}` - The result of an accepted auth command. The `proof` property will hold the token signed with the user's private key, `email` will hold the user's email.
-* `{response:'rejected'}` - The user rejected the auth request.
 * `{response:'error', message:_}` - An error response. The message will have some hopefully useful message.
+    * `message: 'rejected'` - The user rejected the auth request.
 
 Pages
 =======
@@ -146,7 +150,6 @@ Todo
 ========
 
 * unit tests
-* Pub back webworkers - looks like long-running code in an iframe blocks its parent's UI thread
 * Import and export rsa keys
 * Groups - will allow users to have multiple identities with separate emails and rsa keys
 * On setup, allow the user to a "secure image" so there's a visual way to tell that you're using the right service. Mitigates phishing attacks.

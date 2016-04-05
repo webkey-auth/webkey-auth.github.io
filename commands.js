@@ -3,6 +3,9 @@ var webkeyUtils = require('./utils')
 var currentlyAuthing = false
 exports.handle = function(message, getAcceptance, getPassword) {
     var callback = function(error, response) {
+        if(error !== undefined) {
+            response = {response:'error', message:error.message}
+        }
         message.source.postMessage(JSON.stringify(response), message.origin);
         currentlyAuthing = false
     }
@@ -31,6 +34,12 @@ exports.handle = function(message, getAcceptance, getPassword) {
                         else    callback(undefined, {response: 'getPassword', password: password})
                     })
                 }
+            } else if(params.c === 'error'){
+                if(params.message === 'rejected') {
+                    currentlyAuthing = false
+                }
+
+                throw new Error(params.message)
             } else {
                 throw new Error("Invalid command: '"+params.c+"'")
             }
@@ -50,9 +59,12 @@ function auth(origin, token, getAcceptance, getPassword, onAccept, callback) {
             webkeyUtils.acceptAuthRequest(origin, group, token, password, callback)
         } else {
             getAcceptance(function(err) {
-                if(err) callback(err)
-                onAccept()
-                webkeyUtils.acceptAuthRequest(origin, group, token, password, callback)
+                if(err) {
+                    callback(err)
+                } else {
+                    onAccept()
+                    webkeyUtils.acceptAuthRequest(origin, group, token, password, callback)
+                }
             })
         }
     }
@@ -63,7 +75,7 @@ function auth(origin, token, getAcceptance, getPassword, onAccept, callback) {
         if(e.message === "passwordNeeded") {
             return getPassword(function(err, password){
                 if(err) callback(err)
-                getProof(password)
+                else    getProof(password)
             })
         } else {
             throw e

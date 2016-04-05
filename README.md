@@ -46,6 +46,9 @@ Some people don't want google or facebook to know what websites they go to for e
 And yet people still use oauth because they hate remembering and entering passwords.
 As a statically hosted open-source application, webkey can solve both problems.
 
+### Why not `%3Ckeygen>`
+
+The keygen html5 tag is [deprecated](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/keygen).
 
 Authentication Steps
 ====================
@@ -180,6 +183,9 @@ Recommendations
 
 Just like you need password recovery when a user loses their password, you need identity recovery when a user loses their rsa keys or is using your website from a new device.
 To do identity recovery, simply send that person an email with a link to connect their new public key with their old identity. Remember that users can have multiple public keys (at least one for every device).
+
+Note that sending to a person's email address is only *one* way of doing this.
+Webkey will always give authed apps an email address, but an applications is, of course, free to ask for any other type of 2nd factor authentication they want to, including phone numbers, oauth, security questions, or whatever.
 
 ### Auth on Multiple Devices
 

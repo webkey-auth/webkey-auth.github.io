@@ -1,10 +1,15 @@
 <script src="dist/webkey.umd.js"></script>
 <script>
     var callAuthorize = function(commandParams, callback) {
-        var height=600, width=500
+        var height=600, width=500, left = (screen.width/2-width/2), top = (screen.height/2-height)
         var authorizeWindow = window.open('/authorize.html','webkeyWindow',
-                "width="+width+",height="+height+",left="+(screen.width/2-width/2)+",top="+(screen.height/2-height)
+                "width="+width+",height="+height+",left="+left+",top="+top
         )
+
+        // if the window's already open, these lines brings it to the front again with the proper size
+        window.resizeTo(width,height)
+        window.moveTo(left,top)
+        authorizeWindow.focus()
 
         var authed = false
         authorizeWindow.onbeforeunload = function() {

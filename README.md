@@ -51,7 +51,7 @@ The bare necessities:
     webkeyFrame.src = guestDomain+'/guest.html'
     webkeyFrame.style.display = 'none'
 
-    var token = getTokenFromServer() // the server should send down something like Math.random().toString()
+    var token = getTokenFromServer()               // the server should send down something like Math.random().toString()
     window.addEventListener("message", function(message){
         if (message.origin !== guestDomain) return // not from the right place
 
@@ -65,7 +65,7 @@ The bare necessities:
         } else if(response.response === 'auth') {
             console.log("Got the proof: ")
             console.dir(response)
-            verifyProofOnServer(response.proof)// now send the proof to the server to be verified
+            verifyProofOnServer(response.proof)    // now send the proof to the server to be verified
         } else {
             console.log(response)
         }

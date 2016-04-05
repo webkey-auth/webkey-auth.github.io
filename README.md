@@ -4,8 +4,8 @@
 
 Webkey is an RSA based single-click web authentication utility.
 It allows a web application to allow users to securely authenticate without sending usernames and passwords.
-To authenticate on a new website, a user would click on a button displayed within an `<iframe>`, and then confirm on a confirmation page.
-Subsequent authentications can be done automatically if the user wants.
+To authenticate on a new website, on a user click (somewhere on the host page) a request is made (via postmessage) to the webkey guest (hosted in an iframe). A confirmation popup comes up that allows the user to auth (or decide not to).
+Subsequent authentications can be done automatically if the user leaves "auto-auth" selected.
 
 Webkey uses RSA generated within the browser itself and stored in an encrypted form in the browsers LocalStorage.
 Neither the user's private key nor the passphrase used to encrypt their private key is ever transmitted over the wire - even in encrypted form.
@@ -26,7 +26,7 @@ In cryptography, if an attacker has access to your machine, that's already game 
 Client Usage
 ============
 
-See a demo here: http://webkey-auth.github.io/test/host.html
+See a demo here: https://webkey-auth.github.io/test/host.html
 
 The bare necessities:
 ```
@@ -93,6 +93,9 @@ Server Usage
 
 If you'd like to *host* your own webkey server, all you have to do is host this repository on any webserver over https.
 
+Why host your own server? The only reason is if you don't want to trust me or github.
+Otherwise, if multiple sites used webkey from a central domain, user experience would be faster since the necessary files would be far more likely to be cached.
+
 Trust
 ======
 
@@ -131,6 +134,8 @@ This should work exactly like identity recovery.
 Todo
 ========
 
+* unit tests
+* Pub back webworkers - looks like long-running code in an iframe blocks its parent's UI thread
 * Import and export rsa keys
 * Groups - will allow users to have multiple identities with separate emails and rsa keys
 * On setup, allow the user to a "secure image" so there's a visual way to tell that you're using the right service. Mitigates phishing attacks.
@@ -141,6 +146,7 @@ In consideration:
     * Online key storage - Allow users to save their keys online with a password - making sure to warn them that this means they need to trust
 the service to keep your keys safe, since even tho the keys are encrypted its only as strong as their password is, which is
 orders of magnitude weaker than the RSA keys.
+    * Key syncing between devices - I'm currently thinking this isn't worth doing.
 
 How to Contribute!
 ============

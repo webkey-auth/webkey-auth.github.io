@@ -158,15 +158,15 @@ Trust
 With security, the question is always "who do I have to trust?"
 In this case, there are two relevant people/groups you're trusting by using webkey:
 
-1. Me - as the author, you're trusting me not to maliciously change the code on you
-2. Github - Since github is currently hosting this, you have to trust them
+1. Github - Since github is currently hosting this, you have to trust them
+2. Me - as the author, you're trusting me not to maliciously change the code on you. However you don't have to trust me *as much* since the repo is open source and github will keep a record of all changes to the site.
 
 Hopefully someday browsers will implement this natively so these two pieces of trust can go away.
 
 Tradeoffs
 =========
 
-The user's auth is stored permenantly somewhere on the machine, rather than being permanently stored only in a person's head like a password.
+The user's auth is stored permanently somewhere on the machine, rather than being permanently stored only in a person's head like a password.
 * This makes webkey more vulnerable to brute force and heuristic attacks than server-based password auth. Using an additional PIN can mitigate this.
 
 The user's derived AES key is stored in hashed form via pbkdf2 in browser localStorage
@@ -225,13 +225,19 @@ I'll take these point. If I've missed any points from the article in my above li
 
 1. Webkey sends all its page content over SSL, just like that page says you need to.
 2. Webkey doesn't load any external resources, so there's no uncontrolled code that could change the execution environment unless github.com itself decided to hijack webkey.
-3. Its not 2011 anymore. Javascript now has a [secure random number generator](https://developer.mozilla.org/en-US/docs/Web/API/RandomSource/getRandomValues) and various cryptography functions implemented natively and accessible via the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API). Javascript still doesn't have secure erase or a secure keystore, but this has the same security implications with your usernames and passwords as it does for `webkey` key-pairs. So if anything, webkey is at worst just as bad as current username/password solutions in this regard.
+3. Its not 2011 anymore. Javascript now has a [secure random number generator](https://developer.mozilla.org/en-US/docs/Web/API/RandomSource/getRandomValues) and various cryptography functions implemented natively and accessible via the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API).
+And a secure keystore can be created by keeping a window open and using a [SharedWorker](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker).
+Javascript still doesn't have secure erase, but this has the same security implications with your usernames and passwords as it does for `webkey` key-pairs.
+So if anything, webkey is at worst just as bad as current username/password solutions in this regard.
 4. An application server using webkey can verify that a client can be safely communicated with by virtue of the client sending back a signature verifiable on the server. Perhaps I'm misunderstanding what exactly is "unsolved even in the academic literature", so I'd appreciate some clarification there.
 5. Worse options are worse, even in security. In this case, not only is the worse option (username/password auth) less secure, but its also less convenient for users. I think this is the only argument in that article that I don't think holds any water even in the world of 2011 javascript crytpo.
+
+In short, there are no valid arguments in that article that make webkey less secure than traditional username/password auth.
 
 Todo
 ========
 
+* Use a SharedWorker to keep the key in memory. The key will be automatically gone if the browser or all the tabs are closed.
 * unit tests
 * Import and export rsa keys
 * Groups - will allow users to have multiple identities with separate emails and rsa keys

@@ -22,7 +22,7 @@ Webkey is intended as a replacement for traditional username/password auth.
 
 Passwords are the weakest link in internet security. People use easy-to-crack passwords, they use the same password on many sites.
 Because of this, even if you store passwords hashed correctly in your database, an insecure website where the user used the same password can compromise your customer's accounts.
-Its a security nightmare.
+It's a security nightmare.
 
 Webkey provides a far more secure and convenient way to authenticate users.
 The user can use whatever low-entropy key they want to client-side because that key never leaves their machine.
@@ -44,7 +44,7 @@ But since browser client-side certs have failed to make headway thus far, usabil
 Webkey is only about identifying and authenticating a user. Its much less complicated, but essentially a different problem. Oauth could use webkey to implement the end-user authentication rather than username/password credentials.
 
 With oauth, even if you 100% trust your oauth provider (which you still have to do with webkey), you still have to give your oauth provider a username and password.
-Its ironic that the same "password-antipattern" that oauth solves itself has to use the password anti-pattern.
+It's ironic that the same "password-antipattern" that oauth solves itself has to use the password anti-pattern.
 Webkey also requires a password, but that password is never sent over the internet and webkey doesn't make you input a username - one less thing to type in and think about for users.
 
 And oauth is a complicated protocol with a lot of moving parts and multiple flows. Webkey has one flow and no private credentials being passed around.
@@ -140,8 +140,8 @@ Server Usage
 
 I don't recommend anyone host their own webkey server, for the sake of the users.
 
-A. If multiple webkey hosts are floating around the internet, its not really single sign-on anymore. A user will have to type a password once for every different webkey host their websites are using.
-B. Also, user experience would be worse since the necessary files would be less likely to be cached.
+**A.** If multiple webkey hosts are floating around the internet, its not really single sign-on anymore. A user will have to type a password once for every different webkey host their websites are using.
+**B.** Also, user experience would be worse since the necessary files would be less likely to be cached.
 
 If you do still want to host your own webkey server, all you have to do is host this repository on any webserver over https.
 But, please, think of the users! The only reason is if you don't want to trust me or github.
@@ -206,7 +206,7 @@ The *webkey SharedWorker* then signs the token with the RSA private key associat
 The *application server* then validates that the signature matches with the secret token and the user's recorded public key.
 At that point, the user is authenticated.
 
-On-close of the *webkey popup*, on browser crash, or on machine crash, the decrypted key is destroyed (since it was only ever stored in memory - see ''caveats'' for the execption to this in browsers that don't support SharedWorkers).
+On-close of the *webkey popup*, on browser crash, or on machine crash, the decrypted key is destroyed (since it was only ever stored in memory - *see ''caveats'' for the execption to this in browsers that don't support SharedWorkers*).
 
 ### Data transfer diagrams
 
@@ -311,12 +311,13 @@ Caveats
 =========
 
 The user's private rsa keys are stored permanently somewhere on the machine's disk (via localStorage), rather than being permanently stored only in a person's head like a password.
-In the case that the user's machine has been permanently stolen, webkey by-itself is more vulnerable to brute force and heuristic attacks than server-based password auth (*on the other hand, if the machine only has a program installed on it without the user's knowledge, username/password auth is no better*).
+In the case that the user's machine has been permanently stolen, webkey by-itself is more vulnerable to brute force and heuristic attacks than server-based password auth (*on the other hand, if an application server is compromised, username/password auth is much worse*).
 Using an additional short 4-number PIN can mitigate this.
 
 On browsers that don't support SharedWorkers (ahem IE), the user's RSA keys are transferred using localStorage, and so may get onto the disk briefly, and could stay on the disk indefinitely if the user's machine is unsafely powered off at the wrong moment.
 
 Because javascript doesn't have a way to ensure that data has been erased, data might persist in memory until the machine is shut down.
+And in the case of a machine crash, virtual memory stored on disc may persist indefinitely.
 This is also a problem for traditional auth using username/password credentials.
 
 Browser features I wish existed
@@ -341,7 +342,7 @@ I should note that the article considers non-browser javascript "perilous, but n
 
 I'll take these point by point. If I've missed any points from the article in my above list, please let me know.
 
-1. Webkey sends all its page content over SSL, just like that article says you need to.
+1. Webkey's javascript errors if not requested via SSL, so all page content is sent over SSL just like that article says you need to.
 2. Webkey doesn't load any external resources, so there's no uncontrolled code that could change the execution environment unless github.com itself decided to hijack webkey.
 3. Its not 2011 anymore. Javascript now has a [secure random number generator](https://developer.mozilla.org/en-US/docs/Web/API/RandomSource/getRandomValues) and various cryptography functions implemented natively and accessible via the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API).
 And a standard in-memory secure keystore can be created by keeping a window open and using a [SharedWorker](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker) to communicate with that window from others, tho browser javascript doesn't have the ability to access any potentially available [HSM](https://en.wikipedia.org/wiki/Hardware_security_module).
@@ -360,13 +361,13 @@ The rules are as follows:
 
 * A "webkey crack" is defined as a process that discovers a way to generate valid token signatures for a victim (including deriving the victim's private keys), or gain access to a victim's running session
 * Only versions that have been the latest version within the past month are eligible for cracking (no point in cracking versions no one's using anymore).
-* The first 3 people to crack a version will be written down.
+* The first 3 people to crack a version will be honored.
 * Cracking methods, code, and tools must be given in a github repository so others can reproduce the crack.
 * The date of cracking will be considered as the date of the last commit to that github repo.
 * The crack must use the actual online version of webkey hosted by this repo (not a copy running somewhere else).
 * The application server created for being compromised in the crack must be implemented as recommended in this readme.
 * A crack must:
-  * NOT require beginning with physical, OS root, or OS user-space access to the victim's machine (tho if those things can be accessed via other means given in the crack, its acceptable).
+  * NOT require beginning with physical, OS root, or OS user-space access to the victim's machine (tho if those things can be accessed via other means given in the crack, it's acceptable).
   * take less than 2 weeks to run
 * A crack that gains access to a running session but can't generate valid tokens for new sessions must also:
   * NOT require access to the application server or the application browser client's javascript (since both of those things would already compromise the session), and
@@ -379,14 +380,11 @@ The rules are as follows:
 Todo
 ========
 
-!!!!!* The SHARED FUCKING WORKER NEEDS to store the derived key so the identities and origins can be updated without more password entry
-
 * Use subtle crypto where available, lazy load large crypto libraries
-* unit tests
+* unit tests of main service
 * Multiple identities - will allow users to have multiple identities with separate emails and rsa keys
 * On setup, allow the user to a "secure image" so there's a visual way to tell that you're using the right service. Mitigates phishing attacks.
 * Validation tests - Create some files that developers integrating with webkey can use to verify that they're verifying auth correctly and handling edge cases.
-* Once `crypto.subtle` becomes more widely available, use those methods instead of the user-space libraries (for speed and probably security)
 
 In consideration:
 

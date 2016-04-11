@@ -175,7 +175,7 @@ An application won't know whether the user has authed with that application befo
 How Webkey Works
 ================
 
-There are a couple different important actors in webkey's flow:
+There are a couple different important actors in webkey's flow:  
 A. *Application server* - The server who's services the user is trying to authenticate for.  
 B. *Application client* - The local browser page used as an interface to the application server.  
 C. *Webkey service* - The local browser page that does all the webkey security processes.  

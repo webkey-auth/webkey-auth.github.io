@@ -62,7 +62,7 @@ The keygen html5 tag is [deprecated](https://developer.mozilla.org/en-US/docs/We
 Client Usage
 ============
 
-See a demo here: https://webkey-auth.github.io/test/host.html
+See a demo here: https://webkey-auth.github.io/test/hostDemo.html
 
 The bare necessities:
 ```
@@ -381,7 +381,11 @@ Todo
 ========
 
 * Use subtle crypto where available, lazy load large crypto libraries
+* Support IE by spoofing SharedWorkers using localStorage as a communication line
+* Have the SharedWorker poll the popup to make sure that if it no longer exists to kill its memory-cached data (remember to catch postMessage exceptions for browsers like Opera)
 * unit tests of main service
+* Settings - automatic timeout for popup
+* Identity control - change name and email of identity
 * Multiple identities - will allow users to have multiple identities with separate emails and rsa keys
 * On setup, allow the user to a "secure image" so there's a visual way to tell that you're using the right service. Mitigates phishing attacks.
 * Validation tests - Create some files that developers integrating with webkey can use to verify that they're verifying auth correctly and handling edge cases.

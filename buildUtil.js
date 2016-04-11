@@ -6,8 +6,6 @@ var colors = require("colors/safe")
 
 //var copyright = '/* Copyright (c) 2015 Billy Tetrud - Free to use for any purpose: MIT License*/'
 
-var name = 'webkey'
-
 exports.build = function() {
     doyourthang(false)
 }
@@ -16,7 +14,10 @@ exports.buildAndWatch = function() {
 }
 
 function doyourthang(watch) {
-    build(name, watch, {name: name, output: {path:__dirname+'/dist/', name: name+".umd.js"}})
+    var name = 'webkey'; build(name, watch, {name: name, output: {path:__dirname+'/dist/', name: name+".umd.js"}})
+        name = 'webkeyService'; build(name, watch, {name: name, output: {path:__dirname+'/dist/', name: name+".umd.js"}})
+
+        name = 'unitTests'; build('test/'+name, watch, {name: name, output: {path:__dirname+'/test/', name: name+".umd.js"}})
 }
 
 function build(relativeModulePath, watch, options) {

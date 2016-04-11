@@ -1,46 +1,149 @@
 <script src="dist/webkey.umd.js"></script>
 <script>
-    var callAuthorize = function(commandParams, callback) {
-        var height=600, width=500, left = (screen.width/2-width/2), top = (screen.height/2-height)
-        var authorizeWindow = window.open('/authorize.html','webkeyWindow',
-                "width="+width+",height="+height+",left="+left+",top="+top
-        )
-
-        // if the window's already open, these lines brings it to the front again with the proper size
-        window.resizeTo(width,height)
-        window.moveTo(left,top)
-        authorizeWindow.focus()
-
-        var authed = false
-        authorizeWindow.onbeforeunload = function() {
-            if(!authed) {
-                callback(new Error("rejected"))
-            }
-        }
-
-        window.addEventListener("message", function(message){
-            if(message.origin !== document.location.origin) return // ignore
-
-            var params = JSON.parse(message.data)
-            if(params.response === undefined && params.ready === undefined) return // ignore things that aren't responses or ready messages
-
-            if(params.response === commandParams.c) {
-                callback(undefined, params.password)
-                authed = true
-                authorizeWindow.close()
-            } else if(params.ready) {
-                authorizeWindow.postMessage(JSON.stringify(commandParams), document.location.origin)
-            }
-        })
-    }
+    var hostService//, popupService, popupWindow;
 
     window.addEventListener("message", function(message) {
-        webkey.commands.handle(message, function getAcceptance(callback) {
-            callAuthorize({c:'getAcceptance', origin:message.origin}, callback)
-        }, function getAcceptance(callback) {
-            callAuthorize({c:'getPassword'}, callback)
-        })
+        if(message.origin !== document.location.origin) {        // from host
+            var service = getHostService(message.source)
+            service.handleMessage(message)
+        }
     })
 
-    parent.postMessage(JSON.stringify({ready:true}), "*")
+    webkey.Service.sendReady(parent)
+
+
+
+
+    function getHostService(hostSource) {
+        if(hostService === undefined) {
+            hostService = new webkey.Service(hostSource)
+
+            hostService.registerCommand('acceptance', function(respond) {
+                var that = this
+                webkey.requestFromSecureWorker('acceptanceFor', this.origin, function(err, info) {
+                    var e = validateError(err, {rejected:1,needPopup:1})
+                    if(e === undefined) {
+                        respond(undefined, info)
+                    } else if(e.message === 'needPopup') {
+                        createPopup(function() {
+                            webkey.requestFromSecureWorker('acceptanceFor', that.origin, function(err, info) {
+                                var e = validateError(err, {rejected:1})
+                                if(e === undefined) {
+                                    respond(undefined, info)
+                                } else {
+                                    respond(e)
+                                }
+                            })
+                        })
+                    } else {
+                        respond(e)
+                    }
+                })
+            })
+
+            hostService.registerCommand('auth', function(token, respond) {
+                var that = this
+                webkey.requestFromSecureWorker('proof', this.origin, token, function(err, proof) {
+                    var e = validateError(err, {needPopup:1})
+                    if(e === undefined) {
+                        respond(undefined, proof)
+                    } else {     // needPopup
+                        createPopup(function() {
+                            webkey.requestFromSecureWorker('proof', that.origin, token, function(err, proof) {
+                                if(err) throw err
+
+                                respond(undefined, proof)
+                            })
+                        })
+                    }
+                })
+            })
+        }
+
+        return hostService
+    }
+
+    function createPopup(callback) {
+        var height=600, width=500, left = (screen.width/2-width/2), top = (screen.height/2-height)
+        var authorizeWindow = window.open('/authorize.html','webkeyWindow',
+            "width="+width+",height="+height+",left="+left+",top="+top
+        )
+
+        var calledAlready = false
+        window.addEventListener("message", function(message) {
+            if(message.source === authorizeWindow) { // from auth popup
+                var parsedMessage = JSON.parse(message.data)
+                if(parsedMessage.ready && !calledAlready) {
+                    calledAlready = true
+                    callback()
+                }
+            }
+        })
+
+        // if the window's already open, these lines brings it to the front again with the proper size
+//        authorizeWindow.resizeTo(width,height)
+//        authorizeWindow.moveTo(left,top)
+//        authorizeWindow.focus()
+    }
+
+    function validateError(e, validErrors) {
+        if(e === undefined || e.message in validErrors) {
+            return e
+        }
+
+        throw e
+    }
+
+//    function getAuthPopupService(onClose) {
+//
+//        if(popupWindow !== undefined) {
+//            popupWindow.onbeforeunload = undefined // window.open will trigger the onbeforeunload callback (even tho the window doesn't close?), and we don't want the rejection message that happens because of that
+//        }
+//
+//        var height=600, width=500, left = (screen.width/2-width/2), top = (screen.height/2-height)
+//        var authorizeWindow = window.open('/authorize.html','webkeyWindow',
+//            "width="+width+",height="+height+",left="+left+",top="+top
+//        )
+//
+//        if(popupService === undefined) {
+//            popupService = new webkey.Service(authorizeWindow)
+//
+//            window.addEventListener("message", function(message){
+//                if(message.source === authorizeWindow) { // from auth popup
+//                    popupService.handleMessage(message)
+//                }
+//            })
+//
+//            popupWindow = authorizeWindow
+//        }
+//
+//        authorizeWindow.onbeforeunload = onClose
+//
+//        // if the window's already open, these lines brings it to the front again with the proper size
+//        authorizeWindow.resizeTo(width,height)
+//        authorizeWindow.moveTo(left,top)
+//        authorizeWindow.focus()
+//
+//        return popupService
+//    }
+
+//    function requestFromAuthPopup(/*command, args..., closeErrorMessage, respond*/) {
+//        var respond = arguments[arguments.length-1]
+//        var closeErrorMessage = arguments[arguments.length-2]
+//        var requestArgs = Array.prototype.slice.call(arguments,0,-2)
+//
+//        var completed = false
+//        var popupService = getAuthPopupService(function() {
+//            if(!completed) {
+//                respond(new Error(closeErrorMessage))
+//            }
+//        })
+//
+//        popupService.onReady(function() {
+//            popupService.request.apply(popupService, requestArgs.concat([function() {
+//                completed = true
+//                respond.call(respond, arguments)
+//            }]))
+//        })
+//    }
 </script>

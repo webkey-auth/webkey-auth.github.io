@@ -140,7 +140,7 @@ Server Usage
 
 I don't recommend anyone host their own webkey server, for the sake of the users.
 
-**A.** If multiple webkey hosts are floating around the internet, its not really single sign-on anymore. A user will have to type a password once for every different webkey host their websites are using.
+**A.** If multiple webkey hosts are floating around the internet, its not really single sign-on anymore. A user will have to type a password once for every different webkey host their websites are using.  
 **B.** Also, user experience would be worse since the necessary files would be less likely to be cached.
 
 If you do still want to host your own webkey server, all you have to do is host this repository on any webserver over https.
@@ -176,10 +176,10 @@ How Webkey Works
 ================
 
 There are a couple different important actors in webkey's flow:
-A. *Application server* - The server who's services the user is trying to authenticate for.
-B. *Application client* - The local browser page used as an interface to the application server.
-C. *Webkey service* - The local browser page that does all the webkey security processes.
-D. *Webkey popup* - The local browser page that asks for any user-input.
+A. *Application server* - The server who's services the user is trying to authenticate for.  
+B. *Application client* - The local browser page used as an interface to the application server.  
+C. *Webkey service* - The local browser page that does all the webkey security processes.  
+D. *Webkey popup* - The local browser page that asks for any user-input.  
 E. *Webkey SharedWorker* - The [SharedWorker](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker) that keeps decrypted RSA keys in memory and creates signatures.
 
 The *webkey service* is run locally in the browser as a page loaded in an iframe.
